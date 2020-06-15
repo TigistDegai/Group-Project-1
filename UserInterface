@@ -1,0 +1,382 @@
+package groupProject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+
+public class UserInterface {
+
+    private static UserInterface userInterface;
+    private BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+    private static Theater theater;
+    private static final int exit = 0;
+    private static final int add_client = 1;
+    private static final int add_customer = 2;
+    private static final int add_show = 3;
+    private static final int remove_client = 4;
+    private static final int remove_customer = 5;
+    private static final int list_all_clients = 6;
+    private static final int add_credit_card = 7;
+    private static final int remove_credit_card = 8;
+    private static final int list_all_customers = 9;
+    private static final int list_all_shows = 10;
+    private static final int save = 11;
+    private static final int retrieve = 12;
+    private static final int help = 13;
+
+
+    /**
+     * Made private for singleton pattern.
+     * Conditionally looks for any saved data. Otherwise, it gets
+     * a singleton Library object.
+     */
+    private UserInterface() {
+        if (yesOrNo("Look for saved data and  use it?")) {
+            retrieve();
+        } else {
+            theater = Theater.instance();
+        }
+    }
+
+    /**
+     * Supports the singleton pattern
+     *
+     * @return the singleton object
+     */
+    public static UserInterface instance() {
+        if (userInterface == null) {
+            return userInterface = new UserInterface();
+        } else {
+            return userInterface;
+        }
+    }
+
+    /**
+     * Gets a token after prompting
+     *
+     * @param prompt - whatever the user wants as prompt
+     * @return - the token from the keyboard
+     */
+    public String getToken(String prompt) {
+        do {
+            try {
+                System.out.println(prompt);
+                String line = reader.readLine();
+                StringTokenizer tokenizer = new StringTokenizer(line, "\n\r\f");
+                if (tokenizer.hasMoreTokens()) {
+                    return tokenizer.nextToken();
+                }
+            } catch (IOException ioe) {
+                System.exit(0);
+            }
+        } while (true);
+    }
+
+    /**
+     * Queries for a yes or no and returns true for yes and false for no
+     *
+     * @param prompt The string to be prepended to the yes/no prompt
+     * @return true for yes and false for no
+     */
+    private boolean yesOrNo(String prompt) {
+        String more = getToken(prompt + " (Y|y)[es] or anything else for no");
+        if (more.charAt(0) != 'y' && more.charAt(0) != 'Y') {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Converts the string to a number
+     *
+     * @param prompt the string for prompting
+     * @return the integer corresponding to the string
+     */
+    public int getNumber(String prompt) {
+        do {
+            try {
+                String item = getToken(prompt);
+                Integer number = Integer.valueOf(item);
+                return number.intValue();
+            } catch (NumberFormatException nfe) {
+                System.out.println("Please input a number ");
+            }
+        } while (true);
+    }
+
+    /**
+     * Prompts for a date and gets a date object
+     *
+     * @param prompt the prompt
+     * @return the data as a Calendar object
+     */
+    public Calendar getDate(String prompt) {
+        do {
+            try {
+                Calendar date = new GregorianCalendar();
+                String item = getToken(prompt);
+                DateFormat dateFormat = SimpleDateFormat.getDateInstance(DateFormat.SHORT);
+                date.setTime(dateFormat.parse(item));
+                return date;
+            } catch (Exception fe) {
+                System.out.println("Please input a date as mm/dd/yy");
+            }
+        } while (true);
+    }
+
+    /**
+     * Prompts for a command from the keyboard
+     *
+     * @return a valid command
+     */
+    public int getCommand() {
+        do {
+            try {
+                int value = Integer.parseInt(getToken("Enter command:" + help + " for help"));
+                if (value >= exit && value <= help) {
+                    return value;
+                }
+            } catch (NumberFormatException nfe) {
+                System.out.println("Enter a number");
+            }
+        } while (true);
+    }
+
+    /**
+     * Displays the help screen
+     */
+    public void help() {
+        System.out.println("Enter a number between 0 and 12 as explained below:");
+        System.out.println(exit + " to Exit\n");
+        System.out.println(add_client + " to add a client");
+        System.out.println(add_customer + " to  add customer");
+        System.out.println(add_show + " to add show");
+        System.out.println(add_credit_card + " to add credit card");
+        System.out.println(remove_client + " to remove client ");
+        System.out.println(remove_customer + " to  remove customer");
+        System.out.println(remove_credit_card + " to remove credit card");
+        System.out.println(list_all_clients + " to list all clients");
+        System.out.println(list_all_customers + " to list all customers");
+        System.out.println(list_all_shows + " to list all shows");
+        System.out.println(save + " to  save data");
+        System.out.println(retrieve + " to  retrieve");
+        System.out.println(help + " for help");
+    }
+
+    /**
+     * Method to be called for adding a member.
+     * Prompts the user for the appropriate values and
+     * uses the appropriate Library method for adding the member.
+     */
+    public void addClient() {
+        String name = getToken("Enter client name");
+        String address = getToken("Enter address");
+        String phone = getToken("Enter phone");
+        Client result;
+        result = theater.addClient(name, address, phone);
+        if (result == null) {
+            System.out.println("Could not add member");
+        }
+        System.out.println("New client added ");
+    }
+
+    /**
+     * Method to be called for adding a book.
+     * Prompts the user for the appropriate values and
+     * uses the appropriate Library method for adding the book.
+     */
+    public void addCustomer() {
+        Customer result;
+        do {
+            String name = getToken("Enter customer name");
+            String address = getToken("Enter address");
+            String phone_number = getToken("Enter phone number");
+            String card_number = getToken("Enter card number");
+            String exp_date = getToken("Enter exp date");
+            result = theater.addCustomer(name, address, phone_number, card_number, exp_date);
+            if (result != null) {
+                //System.out.println(result);
+            } else {
+                System.out.println("Customer could not be added");
+            }
+            System.out.println("New Customer added");
+            if (!yesOrNo("Add more customer?")) {
+                break;
+            }
+        } while (true);
+    }
+
+    public void addShow() {
+
+        String name = getToken("Enter show name");
+        String client_id = getToken("Enter client Id");
+        String start_date = getToken("Enter start date: dd/mm/yyyy");
+        String end_date = getToken("Enter end date: dd/mm/yyyy");
+        Show result;
+        result = theater.addShow(name, client_id, start_date, end_date);
+        if (result == null) {
+            System.out.println("Could not add show");
+        }
+        System.out.println("Show added");
+
+    }
+
+    public void addCreditCard() {
+        String customer_id = getToken("Enter customerID");
+        String credit_card_number = getToken("Enter card number");
+        String exp_date = getToken("Enter exp date");
+        boolean result;
+        result = theater.addCreditCard(customer_id,credit_card_number,exp_date);
+        if (!result){
+            System.out.println("could not add credit card");
+        }
+        System.out.println("New card added.");
+
+    }
+
+    public void removeClient() {
+        String client_id = getToken("Enter client Id");
+        boolean result;
+        result = theater.removeClient(client_id);
+        if (!result) {
+            System.out.println("Could not remove client");
+        }
+        System.out.println("Client removed ");
+    }
+
+    public void removeCustomer() {
+        String customer_id = getToken("Enter customer Id");
+        boolean result;
+        result = theater.removeCustomer(customer_id);
+        if (!result) {
+            System.out.println("Could not remove customer");
+        }
+        System.out.println("Customer removed");
+    }
+
+    public void removeCreditCard() {
+        String credit_card_number = getToken("Enter credit card number");
+        boolean result;
+        result = theater.removeCreditCard(credit_card_number);
+        if (!result) {
+            System.out.println("Could not remove credit card");
+        }else {
+            System.out.println("Credit card removed");
+        }
+        
+
+    }
+    public void listAllShows(){
+
+        System.out.println(theater.listOfShow());
+    }
+
+    public void listAllClients(){
+
+        System.out.println(theater.clientList());
+    }
+
+    public void listAllCustomers()
+    {
+        System.out.println(theater.listOfCustomers());
+    }
+
+    /**
+     * Method to be called for saving the Library object.
+     * Uses the appropriate Library method for saving.
+     */
+    private void save() {
+        if (theater.save()) {
+            System.out.println(" The theater has been successfully saved in the file TheaterData \n");
+        } else {
+            System.out.println(" There has been an error in saving \n");
+        }
+    }
+
+    /**
+     * Method to be called for retrieving saved data.
+     * Uses the appropriate Library method for retrieval.
+     */
+    private void retrieve() {
+        try {
+            Theater theater = Theater.retrieve();
+            if (theater != null) {
+                System.out.println(" The theater has been successfully retrieved from the file TheaterData \n");
+                theater = theater;
+            } else {
+                System.out.println("File doesnt exist; creating new library");
+                theater = Theater.instance();
+            }
+        } catch (Exception cnfe) {
+            cnfe.printStackTrace();
+        }
+    }
+
+    /**
+     * Will put the whole process together.
+     * Calls the appropriate method for the different functionalities.
+     */
+    public void process() {
+        int command;
+        help();
+        while ((command = getCommand()) != exit) {
+            switch (command) {
+                case add_client:
+                    addClient();
+                    break;
+                case add_customer:
+                    addCustomer();
+                    break;
+                case add_show:
+                    addShow();
+                    break;
+                case add_credit_card:
+                    addCreditCard();
+                    break;
+                case remove_client:
+                    removeClient();
+                    break;
+                case remove_credit_card:
+                    removeCreditCard();
+                    break;
+                case remove_customer:
+                    removeCustomer();
+                    break;
+                case list_all_clients:
+                    listAllClients();
+                    break;
+                case list_all_customers:
+                    listAllCustomers();
+                    break;
+                case list_all_shows:
+                    listAllShows();
+                    break;
+                case save:
+                    save();
+                    break;
+                case retrieve:
+                    retrieve();
+                    break;
+                case help:
+                    help();
+                    break;
+            }
+        }
+    }
+
+    /**
+     * The method to start the application. Simply calls process().
+     *
+     * @param args not used
+     */
+    public static void main(String[] args) {
+
+        UserInterface.instance().process();
+    }
+}
